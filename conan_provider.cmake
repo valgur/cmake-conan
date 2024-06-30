@@ -524,6 +524,15 @@ function(conan_version_check)
 endfunction()
 
 
+function(get_latest_conan_version VERSION_VARIABLE)
+    set(json_file "${CMAKE_BINARY_DIR}/conan_latest_release.json")
+    file(DOWNLOAD "https://api.github.com/repos/conan-io/conan/releases/latest" "${json_file}")
+    file(READ "${json_file}" json)
+    string(REGEX MATCH "\"tag_name\": \"([^\"]+)\"" _ "${json}")
+    set(${VERSION_VARIABLE} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+endfunction()
+
+
 macro(construct_profile_argument argument_variable profile_list)
     set(${argument_variable} "")
     if("${profile_list}" STREQUAL "CONAN_HOST_PROFILE")
