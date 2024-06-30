@@ -773,3 +773,78 @@ class TestDownload:
         assert 'Downloading Conan ' in out
         assert (os.path.exists(os.path.join(binary_dir, 'conan', 'conan')) or
                 os.path.exists(os.path.join(binary_dir, 'conan', 'conan.exe')))
+
+    @staticmethod
+    def _prepare_isolated_home(binary_dir):
+        # Copy everything except settings.yml from the real CONAN_HOME to the expected isolated CONAN_HOME.
+        # The settings.yml should be re-created after CMake configure.
+        conan_home = os.getenv("CONAN_HOME")
+        isolated_home = os.path.join(binary_dir, "conan_home")
+        shutil.copytree(conan_home, isolated_home)
+        isolated_settings_yml = os.path.join(isolated_home, "settings.yml")
+        os.unlink(isolated_settings_yml)
+        return isolated_settings_yml
+
+    @pytest.mark.parametrize("isolate", ["always", "never"])
+    def test_isolate_home(self, capfd, basic_cmake_project, isolate):
+        "Test that CONAN_ISOLATE_HOME=always/never results in {build_dir}/conan_home being used / not used"
+        source_dir, binary_dir = basic_cmake_project
+        isolated_settings_yml = self._prepare_isolated_home(binary_dir)
+        assert not os.path.exists(isolated_settings_yml)
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'download' / 'auto_download', source_dir, dirs_exist_ok=True)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release'
+            f' -DCONAN_ISOLATE_HOME={isolate}')
+        out, _ = capfd.readouterr()
+        if isolate == "always":
+            assert 'Setting CONAN_HOME to ' in out
+            assert os.path.exists(isolated_settings_yml)
+        else:
+            assert 'Setting CONAN_HOME to ' not in out
+            assert not os.path.exists(isolated_settings_yml)
+
+    @pytest.mark.parametrize("conan_missing", [True, False])
+    def test_download_never(self, capfd, basic_cmake_project, conan_missing):
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'download' / 'auto_download', source_dir, dirs_exist_ok=True)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release'
+            ' -DCONAN_DOWNLOAD=never' + (' -DCONAN_MINIMUM_VERSION=100.0.0' if conan_missing else ''), check=False)
+        out, err = capfd.readouterr()
+        assert 'Downloading Conan ' not in out
+        if conan_missing:
+            assert 'CMake-Conan: Conan version must be 100.0.0 or later' in err
+        else:
+            assert 'CMake-Conan: Conan version must be 100.0.0 or later' not in err
+
+    def test_download_always(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        isolated_settings_yml = self._prepare_isolated_home(binary_dir)
+        assert not os.path.exists(isolated_settings_yml)
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'download' / 'auto_download', source_dir, dirs_exist_ok=True)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release'
+            ' -DCONAN_DOWNLOAD=always -DCONAN_ISOLATE_HOME=if-downloaded -DCONAN_MINIMUM_VERSION=100.0.0', check=False)
+        out, _ = capfd.readouterr()
+        assert 'Downloading Conan ' in out
+        assert 'Setting CONAN_HOME to ' in out
+        assert os.path.exists(isolated_settings_yml)
+        assert (os.path.exists(os.path.join(binary_dir, 'conan_client', 'conan')) or
+                os.path.exists(os.path.join(binary_dir, 'conan_client', 'conan.exe')))
+
+    @pytest.mark.parametrize("conan_missing", [True, False])
+    def test_download_if_missing(self, capfd, basic_cmake_project, conan_missing):
+        source_dir, binary_dir = basic_cmake_project
+        print(binary_dir)
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'download' / 'auto_download', source_dir, dirs_exist_ok=True)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release'
+            ' -DCONAN_DOWNLOAD=if-missing -DCONAN_ISOLATE_HOME=never' + (' -DCONAN_MINIMUM_VERSION=100.0.0' if conan_missing else ''))
+        out, err = capfd.readouterr()
+        assert 'CMake-Conan: Conan version must be 100.0.0 or later' not in err
+        assert not os.path.exists(os.path.join(binary_dir, 'conan_home'))
+        if conan_missing:
+            assert 'Will download the latest version instead.' in out
+            assert 'Downloading Conan ' in out
+            assert re.search(r"conan_client/conan(\.exe)? install ", out)
+            assert (os.path.exists(os.path.join(binary_dir, 'conan_client', 'conan')) or
+                    os.path.exists(os.path.join(binary_dir, 'conan_client', 'conan.exe')))
+        else:
+            assert 'Will download the latest version instead.' not in out
+            assert 'Downloading Conan ' not in out
