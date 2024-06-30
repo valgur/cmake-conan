@@ -544,6 +544,59 @@ function(get_latest_conan_version VERSION_VARIABLE)
 endfunction()
 
 
+function(download_conan)
+    set(options "")
+    set(oneValueArgs VERSION DESTINATION)
+    set(multiValueArgs "")
+    include(CMakeParseArguments)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${oneValueArgs}" "${multiValueArgs}")
+
+    if(NOT ARG_VERSION)
+        message(FATAL_ERROR "CMake-Conan: Required parameter VERSION not set!")
+    endif()
+    if(NOT ARG_DESTINATION)
+        message(FATAL_ERROR "CMake-Conan: Required parameter DESTINATION not set!")
+    endif()
+
+    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "AMD64|amd64|x86_64|x64")
+        set(HOST_ARCH "x86_64")
+    elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "X86|i686|i386")
+        set(HOST_ARCH "i686")
+    elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+        set(HOST_ARCH "arm64")
+    else()
+        message(FATAL_ERROR "CMake-Conan: Pre-packaged Conan is not available for ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+    endif()
+
+    set(FILE_EXT "tgz")
+    if(WIN32 AND HOST_ARCH MATCHES "x86_64|i686")
+        set(HOST_OS "windows")
+        set(FILE_EXT "zip")
+    elseif(APPLE AND HOST_ARCH MATCHES "x86_64|arm64")
+        set(HOST_OS "macos")
+    elseif(LINUX AND HOST_ARCH STREQUAL "x86_64")
+        set(HOST_OS "linux")
+    else()
+        message(FATAL_ERROR "CMake-Conan: Pre-packaged Conan is not available for ${CMAKE_SYSTEM_NAME} ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+    endif()
+
+    set(CONAN_VERSION ${ARG_VERSION})
+    set(CONAN_FILE "conan-${CONAN_VERSION}-${HOST_OS}-${HOST_ARCH}.${FILE_EXT}")
+    set(CONAN_URL "https://github.com/conan-io/conan/releases/download/${CONAN_VERSION}/${CONAN_FILE}")
+
+    message(STATUS "Downloading Conan ${CONAN_VERSION} from ${CONAN_URL}")
+    include(FetchContent)
+    FetchContent_Declare(
+        Conan
+        URL "${CONAN_URL}"
+        DOWNLOAD_DIR ${CMAKE_BINARY_DIR}
+        SOURCE_DIR "${ARG_DESTINATION}"
+        DOWNLOAD_EXTRACT_TIMESTAMP 1
+    )
+    FetchContent_MakeAvailable(Conan)
+endfunction()
+
+
 macro(construct_profile_argument argument_variable profile_list)
     set(${argument_variable} "")
     if("${profile_list}" STREQUAL "CONAN_HOST_PROFILE")
