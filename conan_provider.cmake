@@ -545,9 +545,20 @@ endfunction()
 
 function(get_latest_conan_version VERSION_VARIABLE)
     set(json_file "${CMAKE_BINARY_DIR}/conan_latest_release.json")
-    file(DOWNLOAD "https://api.github.com/repos/conan-io/conan/releases/latest" "${json_file}")
-    file(READ "${json_file}" json)
+    file(DOWNLOAD "https://api.github.com/repos/conan-io/conan/releases/latest"
+                  "${json_file}"
+                  INACTIVITY_TIMEOUT 5
+                  STATUS status)
+    list(GET status 0 status_code)
+    if(NOT status_code EQUAL 0)
+        list(GET status 1 message)
+        message(FATAL_ERROR "CMake-Conan: Failed to get the latest Conan version info: ${message} (${status_code})")
+    endif()
+    file(READ "${json_file}" json ENCODING UTF-8)
     string(REGEX MATCH "\"tag_name\": \"([^\"]+)\"" _ "${json}")
+    if(NOT _)
+        message(FATAL_ERROR "CMake-Conan: Failed to parse the latest Conan version info from: '${json_file}'")
+    endif()
     set(${VERSION_VARIABLE} "${CMAKE_MATCH_1}" PARENT_SCOPE)
 endfunction()
 
