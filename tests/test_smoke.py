@@ -755,3 +755,13 @@ class TestTryCompile:
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider}')
         out, _ = capfd.readouterr()
         assert 'Performing Test HELLO_WORLD_CAN_COMPILE - Success' in out
+
+
+class TestDownload:
+    def test_get_latest_version(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'download' / 'get_latest_version', source_dir, dirs_exist_ok=True)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider}')
+        out, _ = capfd.readouterr()
+        assert re.search(r'Latest Conan version: \d+\.\d+\.\d+', out)
+
