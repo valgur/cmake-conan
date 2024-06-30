@@ -765,3 +765,11 @@ class TestDownload:
         out, _ = capfd.readouterr()
         assert re.search(r'Latest Conan version: \d+\.\d+\.\d+', out)
 
+    def test_download_function(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'download' / 'download_function', source_dir, dirs_exist_ok=True)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider}')
+        out, _ = capfd.readouterr()
+        assert 'Downloading Conan ' in out
+        assert (os.path.exists(os.path.join(binary_dir, 'conan', 'conan')) or
+                os.path.exists(os.path.join(binary_dir, 'conan', 'conan.exe')))
