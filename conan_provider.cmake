@@ -507,7 +507,7 @@ function(conan_get_version conan_command conan_current_version)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     if(conan_result)
-        message(FATAL_ERROR "CMake-Conan: Error when trying to run Conan")
+        message(FATAL_ERROR "CMake-Conan: Error when trying to run '${conan_command} --version'")
     endif()
 
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" conan_version ${conan_output})
