@@ -473,13 +473,13 @@ function(conan_install)
     # the files are generated in a folder that depends on the layout used, if
     # one is specified, but we don't know a priori where this is.
     # TODO: this can be made more robust if Conan can provide this in the json output
-    string(JSON CONAN_GENERATORS_FOLDER GET ${conan_stdout} graph nodes 0 generators_folder)
+    string(JSON CONAN_GENERATORS_FOLDER GET "${conan_stdout}" graph nodes 0 generators_folder)
     cmake_path(CONVERT ${CONAN_GENERATORS_FOLDER} TO_CMAKE_PATH_LIST CONAN_GENERATORS_FOLDER)
     # message("conan stdout: ${conan_stdout}")
     message(STATUS "CMake-Conan: CONAN_GENERATORS_FOLDER=${CONAN_GENERATORS_FOLDER}")
     set_property(GLOBAL PROPERTY CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}")
     # reconfigure on conanfile changes
-    string(JSON CONANFILE GET ${conan_stdout} graph nodes 0 label)
+    string(JSON CONANFILE GET "${conan_stdout}" graph nodes 0 label)
     message(STATUS "CMake-Conan: CONANFILE=${CMAKE_SOURCE_DIR}/${CONANFILE}")
     set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/${CONANFILE}")
     # success
