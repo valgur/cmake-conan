@@ -27,10 +27,11 @@ src_dir = Path(__file__).parent.parent
 conan_provider = src_dir / "conan_provider.cmake"
 resources_dir= src_dir / 'tests' / 'resources'
 
-unix = pytest.mark.skipif(platform.system() != "Linux" and platform.system() != "Darwin", reason="Linux or Darwin only")
+unix = pytest.mark.skipif(platform.system() not in ["Linux", "Darwin"], reason="Linux or Darwin only")
 linux = pytest.mark.skipif(platform.system() != "Linux", reason="Linux only")
 darwin = pytest.mark.skipif(platform.system() != "Darwin", reason="Darwin only")
 windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows only")
+android = pytest.mark.skipif(not os.environ.get("ANDROID_NDK_ROOT"), reason="Requires $ANDROID_NDK_ROOT to be set")
 
 
 def run(cmd, check=True):
@@ -524,6 +525,7 @@ class TestOsVersion:
         out, _ = capfd.readouterr()
         assert "os.version=10.15" not in out
 
+@android
 class TestAndroid:
     def test_android_armv8(self, capfd, basic_cmake_project):
         "Building for Android armv8"
