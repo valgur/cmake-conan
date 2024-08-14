@@ -473,8 +473,8 @@ class TestLibcxx:
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
             f"-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER={compiler}")
         out, _ = capfd.readouterr()
-        assert "Performing Test _CONAN_IS_GNU_LIBSTDCXX - Success" in out
-        assert "Performing Test _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI - Success" in out
+        assert "Performing Test _conan_is_gnu_libstdcxx - Success" in out
+        assert "Performing Test _conan_gnu_libstdcxx_is_cxx11_abi - Success" in out
         assert "compiler.libcxx=libstdc++11" in out
         if compiler == "clang++":
             assert "The CXX compiler identification is Clang" in out
@@ -490,8 +490,8 @@ class TestLibcxx:
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} '
             '-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"')
         out, _ = capfd.readouterr()
-        assert "Performing Test _CONAN_IS_GNU_LIBSTDCXX - Success" in out
-        assert "Performing Test _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI - Failed" in out
+        assert "Performing Test _conan_is_gnu_libstdcxx - Success" in out
+        assert "Performing Test _conan_gnu_libstdcxx_is_cxx11_abi - Failed" in out
         assert "compiler.libcxx=libstdc++" in out
 
     @linux
@@ -503,7 +503,7 @@ class TestLibcxx:
         out, _ = capfd.readouterr()
         assert "The CXX compiler identification is Clang" in out
         assert "compiler=clang" in out
-        assert "Performing Test _CONAN_IS_LIBCXX - Success" in out
+        assert "Performing Test _conan_is_libcxx - Success" in out
         assert "compiler.libcxx=libc++" in out
 
 class TestOsVersion:
