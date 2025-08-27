@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 # Configurable variables
-set(CONAN_MINIMUM_VERSION "2.0.5" CACHE STRING "Minimum required Conan version")
+set(CONAN_MINIMUM_VERSION "2.1" CACHE STRING "Minimum required Conan version")
 set(CONAN_HOST_PROFILE "default;auto-cmake" CACHE STRING "Conan host profile")
 set(CONAN_BUILD_PROFILE "default" CACHE STRING "Conan build profile")
 set(CONAN_INSTALL_ARGS "--build=missing" CACHE STRING "Command line arguments for conan install")
@@ -162,7 +162,7 @@ macro(detect_gnu_libstdcxx)
     if(_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
         set(_CONAN_GNU_LIBSTDCXX_SUFFIX "11")
     endif()
-    unset (_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
+    unset(_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
 endmacro()
 
 
@@ -289,10 +289,10 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
 
     message(STATUS "CMake-Conan: [settings] compiler=${_COMPILER}")
     message(STATUS "CMake-Conan: [settings] compiler.version=${_COMPILER_VERSION}")
-    if (_COMPILER_RUNTIME)
+    if(_COMPILER_RUNTIME)
         message(STATUS "CMake-Conan: [settings] compiler.runtime=${_COMPILER_RUNTIME}")
     endif()
-    if (_COMPILER_RUNTIME_TYPE)
+    if(_COMPILER_RUNTIME_TYPE)
         message(STATUS "CMake-Conan: [settings] compiler.runtime_type=${_COMPILER_RUNTIME_TYPE}")
     endif()
 
@@ -318,7 +318,7 @@ macro(set_conan_compiler_if_appleclang lang command output_variable)
             OUTPUT_VARIABLE _xcrun_out OUTPUT_STRIP_TRAILING_WHITESPACE)
         cmake_path(GET _xcrun_out PARENT_PATH _xcrun_toolchain_path)
         cmake_path(GET CMAKE_${lang}_COMPILER PARENT_PATH _compiler_parent_path)
-        if ("${_xcrun_toolchain_path}" STREQUAL "${_compiler_parent_path}")
+        if("${_xcrun_toolchain_path}" STREQUAL "${_compiler_parent_path}")
             set(${output_variable} "")
         endif()
         unset(_xcrun_out)
@@ -336,14 +336,14 @@ macro(append_compiler_executables_configuration)
         set_conan_compiler_if_appleclang(C cc _conan_c_compiler)
     else()
         message(WARNING "CMake-Conan: The C compiler is not defined. "
-                        "Please define CMAKE_C_COMPILER or enable the C language.")
+            "Please define CMAKE_C_COMPILER or enable the C language.")
     endif()
     if(CMAKE_CXX_COMPILER)
         set(_conan_cpp_compiler "\"cpp\":\"${CMAKE_CXX_COMPILER}\"")
         set_conan_compiler_if_appleclang(CXX c++ _conan_cpp_compiler)
     else()
         message(WARNING "CMake-Conan: The C++ compiler is not defined. "
-                        "Please define CMAKE_CXX_COMPILER or enable the C++ language.")
+            "Please define CMAKE_CXX_COMPILER or enable the C++ language.")
     endif()
 
     if(NOT "x${_conan_c_compiler}${_conan_cpp_compiler}" STREQUAL "x")
@@ -429,12 +429,12 @@ endfunction()
 function(conan_profile_detect_default)
     message(STATUS "CMake-Conan: Checking if a default profile exists")
     execute_process(COMMAND ${CONAN_COMMAND} profile path default
-                    RESULT_VARIABLE return_code
-                    OUTPUT_VARIABLE conan_stdout
-                    ERROR_VARIABLE conan_stderr
-                    ECHO_ERROR_VARIABLE    # show the text output regardless
-                    ECHO_OUTPUT_VARIABLE
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        RESULT_VARIABLE return_code
+        OUTPUT_VARIABLE conan_stdout
+        ERROR_VARIABLE conan_stderr
+        ECHO_ERROR_VARIABLE    # show the text output regardless
+        ECHO_OUTPUT_VARIABLE
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     if(NOT ${return_code} EQUAL "0")
         message(STATUS "CMake-Conan: The default profile doesn't exist, detecting it.")
         execute_process(COMMAND ${CONAN_COMMAND} profile detect
@@ -464,11 +464,11 @@ function(conan_install)
     endif()
 
     execute_process(COMMAND ${CONAN_COMMAND} install "${CONAN_CONANFILE_DIR}" ${CONAN_ARGS} ${ARGN} --format=json
-                    RESULT_VARIABLE return_code
-                    OUTPUT_VARIABLE conan_stdout
-                    ERROR_VARIABLE conan_stderr
-                    ECHO_ERROR_VARIABLE    # show the text output regardless
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        RESULT_VARIABLE return_code
+        OUTPUT_VARIABLE conan_stdout
+        ERROR_VARIABLE conan_stderr
+        ECHO_ERROR_VARIABLE    # show the text output regardless
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
     if(DEFINED PATH_TO_CMAKE_BIN)
         set(ENV{PATH} "${_OLD_PATH}")
@@ -486,6 +486,7 @@ function(conan_install)
     # message("conan stdout: ${conan_stdout}")
     message(STATUS "CMake-Conan: CONAN_GENERATORS_FOLDER=${CONAN_GENERATORS_FOLDER}")
     set_property(GLOBAL PROPERTY CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}")
+    apply_conan_toolchain_paths("${CONAN_GENERATORS_FOLDER}/conan_toolchain.cmake")
     # reconfigure on conanfile changes
     string(JSON CONANFILE GET ${conan_stdout} graph nodes 0 label)
     message(STATUS "CMake-Conan: CONANFILE=${CONAN_CONANFILE_DIR}/${CONANFILE}")
@@ -513,16 +514,16 @@ endfunction()
 
 
 function(conan_version_check)
-    set(options )
+    set(options)
     set(oneValueArgs MINIMUM CURRENT RESULT)
-    set(multiValueArgs )
+    set(multiValueArgs)
     cmake_parse_arguments(CONAN_VERSION_CHECK
         "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(NOT CONAN_VERSION_CHECK_MINIMUM)
         message(FATAL_ERROR "CMake-Conan: Required parameter MINIMUM not set!")
     endif()
-        if(NOT CONAN_VERSION_CHECK_CURRENT)
+    if(NOT CONAN_VERSION_CHECK_CURRENT)
         message(FATAL_ERROR "CMake-Conan: Required parameter CURRENT not set!")
     endif()
 
@@ -532,7 +533,7 @@ function(conan_version_check)
         endif()
         if(CONAN_DOWNLOAD STREQUAL "if-missing")
             message(STATUS "CMake-Conan: Found Conan but its version (${CONAN_VERSION_CHECK_CURRENT}) is older than "
-                           "required (${CONAN_VERSION_CHECK_MINIMUM}). Will download the latest version instead.")
+                "required (${CONAN_VERSION_CHECK_MINIMUM}). Will download the latest version instead.")
         else()
             message(FATAL_ERROR "CMake-Conan: Conan version must be ${CONAN_VERSION_CHECK_MINIMUM} or later")
         endif()
@@ -547,9 +548,9 @@ endfunction()
 function(get_latest_conan_version VERSION_VARIABLE)
     set(json_file "${CMAKE_BINARY_DIR}/conan_latest_release.json")
     file(DOWNLOAD "https://api.github.com/repos/conan-io/conan/releases/latest"
-                  "${json_file}"
-                  INACTIVITY_TIMEOUT 5
-                  STATUS status)
+        "${json_file}"
+        INACTIVITY_TIMEOUT 5
+        STATUS status)
     list(GET status 0 status_code)
     if(NOT status_code EQUAL 0)
         list(GET status 1 message)
@@ -644,7 +645,7 @@ macro(conan_provide_dependency method package_name)
             if(CONAN_COMMAND)
                 conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
                 conan_version_check(MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION}
-                                    RESULT _conan_version_check_result)
+                    RESULT _conan_version_check_result)
                 if(NOT _conan_version_check_result)
                     set(CONAN_COMMAND "-NOTFOUND")
                 endif()
@@ -653,7 +654,7 @@ macro(conan_provide_dependency method package_name)
         if(NOT CONAN_COMMAND)
             if(CONAN_DOWNLOAD STREQUAL "never")
                 message(FATAL_ERROR "CMake-Conan: Conan executable not found. "
-                                    "Please install Conan, set CONAN_COMMAND or enable CONAN_DOWNLOAD")
+                    "Please install Conan, set CONAN_COMMAND or enable CONAN_DOWNLOAD")
             endif()
             if(CONAN_DOWNLOAD_VERSION STREQUAL "latest")
                 get_latest_conan_version(_download_version)
@@ -685,11 +686,11 @@ macro(conan_provide_dependency method package_name)
                 message(WARNING "Cmake-conan: CMakeDeps generator was not defined in the conanfile")
             endif()
             set(generator "")
-        elseif (EXISTS "${CONAN_CONANFILE_DIR}/conanfile.txt")
+        elseif(EXISTS "${CONAN_CONANFILE_DIR}/conanfile.txt")
             file(READ "${CONAN_CONANFILE_DIR}/conanfile.txt" outfile)
             if(NOT "${outfile}" MATCHES ".*CMakeDeps.*")
                 message(WARNING "Cmake-conan: CMakeDeps generator was not defined in the conanfile. "
-                        "Please define the generator as it will be mandatory in the future")
+                    "Please define the generator as it will be mandatory in the future")
             endif()
             set(generator "-g;CMakeDeps")
         endif()
@@ -754,8 +755,8 @@ macro(conan_provide_dependency_check)
     get_property(_CONAN_PROVIDE_DEPENDENCY_INVOKED GLOBAL PROPERTY CONAN_PROVIDE_DEPENDENCY_INVOKED)
     if(NOT _CONAN_PROVIDE_DEPENDENCY_INVOKED)
         message(WARNING "Conan is correctly configured as dependency provider, "
-                        "but Conan has not been invoked. Please add at least one "
-                        "call to `find_package()`.")
+            "but Conan has not been invoked. Please add at least one "
+            "call to `find_package()`.")
         if(DEFINED CONAN_COMMAND)
             # supress warning in case `CONAN_COMMAND` was specified but unused.
             set(_CONAN_COMMAND ${CONAN_COMMAND})
@@ -764,6 +765,21 @@ macro(conan_provide_dependency_check)
     endif()
     unset(_CONAN_PROVIDE_DEPENDENCY_INVOKED)
 endmacro()
+
+
+function(apply_conan_toolchain_paths toolchain_file)
+    # Apply `list(PREPEND CMAKE_PROGRAM_PATH "...")` commands from the generated toolchain file.
+    if(NOT EXISTS "${toolchain_file}")
+        message(FATAL_ERROR "Toolchain file not found: ${toolchain_file}")
+    endif()
+    file(READ "${toolchain_file}" _toolchain_content)
+    string(REGEX MATCHALL "list\\(PREPEND[ \t]+([A-Za-z0-9_]+_PATH)[ \t]+[^)]+\\)" _matches "${_toolchain_content}")
+    foreach(_line IN LISTS _matches)
+        string(REGEX REPLACE "list\\(PREPEND[ \t]+([A-Za-z0-9_]+_PATH)[ \t]+.*" "\\1" _var "${_line}")
+        cmake_language(EVAL CODE "${_line}")
+        set(${_var} "${${_var}}" CACHE INTERNAL "")
+    endforeach()
+endfunction()
 
 
 # Add a deferred call at the end of processing the top-level directory
